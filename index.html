@@ -14,6 +14,7 @@
 <div id="avgPricePerSquareMetre" style="width:600px;height:350px;"></div>
 <div id="addedEstatesPerDay" style="width:600px;height:350px;"></div>
 <div id="soldObjects" style="width:600px;height:350px;"></div>
+<div id="providersSold" style="width:600px;height:350px;"></div>
 <div id="newObjects" style="width:600px;height:350px;"></div>
 
 <script>
@@ -35,9 +36,18 @@
     });
 
     Plotly.newPlot("avgPricePerSquareMetre", [{
+        name: "max",
+        x: datesAsArray,
+        y: Object.entries(data).map(x => _.max(x[1].map(e => e.area ? e.price/ e.area : undefined))),
+    },{
+        name: "Durchschnitt",
         x: datesAsArray,
         y: Object.entries(data).map(x => _.meanBy(x[1], e => e.area ? e.price/ e.area : undefined)),
-    }], {
+    },{
+            name: "min",
+            x: datesAsArray,
+            y: Object.entries(data).map(x => _.min(x[1].map(e => e.area ? e.price/ e.area : undefined))),
+        }], {
         title: "Durchschnittspreis pro m²",
         yaxis: { title: "€/m²" }
     }, );
@@ -62,11 +72,23 @@
     let lastEstates = undefined;
     const soldEstates = {};
     const newEstates = {};
+    const providers = new Map();
+    let lastKey = undefined;
     for(let [key, value] of Object.entries(data)) {
-        currentEstates = value.map(x => x.id);
+        currentEstates = [];
+        value.forEach(x => {
+            currentEstates.push(x.id)
+            if (!providers.has(x.provider))
+                providers.set(x.provider, 0)
+        });
         soldEstates[key] = _.difference(lastEstates, currentEstates);
+        soldEstates[key].forEach(x => {
+            const providerSold = data[lastKey].find(a => a.id === x)?.provider;
+            providers.set(providerSold, providers.get(providerSold) + 1);
+        });
         newEstates[key] = lastEstates ? _.difference(currentEstates, lastEstates) : [];
         lastEstates = currentEstates;
+        lastKey = key;
     }
 
     Plotly.newPlot("soldObjects", [{
@@ -76,6 +98,17 @@
     }], {
         title: "Verkaufte Objekte pro Tag",
         yaxis: { title: "" }
+    }, );
+
+    console.log(providers)
+    Plotly.newPlot("providersSold", [{
+        y: Array.from(providers.values()),
+        x: Array.from(providers.keys()),
+        type: "bar",
+    }], {
+        title: "Best Of Makler",
+        xaxis: { title: "Makler" },
+        yaxis: { title: "verkaufte Objekte" },
     }, );
 
     Plotly.newPlot("newObjects", [{
