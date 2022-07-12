@@ -14,6 +14,7 @@
 <div id="avgPricePerSquareMetre" style="width:600px;height:350px;"></div>
 <div id="addedEstatesPerDay" style="width:600px;height:350px;"></div>
 <div id="soldObjects" style="width:600px;height:350px;"></div>
+<div id="ageOfSoldObjects" style="width:600px;height:350px;"></div>
 <div id="providersSold" style="width:600px;height:350px;"></div>
 <div id="newObjects" style="width:600px;height:350px;"></div>
 
@@ -38,15 +39,15 @@
     Plotly.newPlot("avgPricePerSquareMetre", [{
         name: "max",
         x: datesAsArray,
-        y: Object.entries(data).map(x => _.max(x[1].map(e => e.area ? e.price/ e.area : undefined))),
+        y: Object.entries(data).map(x => _.max(x[1].filter(x => x.price > 0 && x.area > 0).map(e => e.area ? e.price/ e.area : undefined))),
     },{
         name: "Durchschnitt",
         x: datesAsArray,
-        y: Object.entries(data).map(x => _.meanBy(x[1], e => e.area ? e.price/ e.area : undefined)),
+        y: Object.entries(data).map(x => _.meanBy(x[1].filter(x => x.price > 0 && x.area > 0), e => e.area ? e.price/ e.area : undefined)),
     },{
             name: "min",
             x: datesAsArray,
-            y: Object.entries(data).map(x => _.min(x[1].map(e => e.area ? e.price/ e.area : undefined))),
+            y: Object.entries(data).map(x => _.min(x[1].filter(x => x.price > 0 && x.area > 0).map(e => e.area ? e.price/ e.area : undefined))),
         }], {
         title: "Durchschnittspreis pro m²",
         yaxis: { title: "€/m²" }
@@ -77,16 +78,16 @@
     for(let [key, value] of Object.entries(data)) {
         currentEstates = [];
         value.forEach(x => {
-            currentEstates.push(x.id)
+            currentEstates.push(x)
             if (!providers.has(x.provider))
                 providers.set(x.provider, 0)
         });
-        soldEstates[key] = _.difference(lastEstates, currentEstates);
+        soldEstates[key] = _.differenceWith(lastEstates, currentEstates, (x,y) => x.id === y.id);
         soldEstates[key].forEach(x => {
-            const providerSold = data[lastKey].find(a => a.id === x)?.provider;
+            const providerSold = data[lastKey].find(a => a.id === x.id)?.provider;
             providers.set(providerSold, providers.get(providerSold) + 1);
         });
-        newEstates[key] = lastEstates ? _.difference(currentEstates, lastEstates) : [];
+        newEstates[key] = lastEstates ? _.differenceWith(currentEstates, lastEstates, (x,y) => x.id === y.id) : [];
         lastEstates = currentEstates;
         lastKey = key;
     }
@@ -100,7 +101,17 @@
         yaxis: { title: "" }
     }, );
 
-    console.log(providers)
+    const year = new Date().getFullYear();
+    console.log()
+    Plotly.newPlot("ageOfSoldObjects", [{
+      x: datesAsArray,
+      y: Object.entries(soldEstates).map(x => _.meanBy(x[1].filter(x => _.isNumber(x.constructionYear) && x.constructionYear > 0).map(e => year - e.constructionYear))),
+      type: "bar",
+    }], {
+      title: "Alter der verkauften Objekte",
+      yaxis: { title: "" },
+    }, );
+
     Plotly.newPlot("providersSold", [{
         y: Array.from(providers.values()),
         x: Array.from(providers.keys()),
