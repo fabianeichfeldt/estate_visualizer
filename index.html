@@ -5,6 +5,7 @@
   <title>Immo data visualizer</title>
   <script src="https://cdn.plot.ly/plotly-2.12.1.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js" integrity="sha512-WFN04846sdKMIP5LKNphMaWzU7YpMyCU245etK3g/2ARYbPK9Ub18eG+ljU96qKRCWh+quCY7yefSmlkQw1ANQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.3.0/luxon.min.js" integrity="sha512-KKbQg5o92MwtJKR9sfm/HkREzfyzNMiKPIQ7i7SZOxwEdiNCm4Svayn2DBq7MKEdrqPJUOSIpy1v6PpFlCQ0YA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="database.js"></script>
 </head>
 <body>
@@ -15,8 +16,10 @@
 <div id="addedEstatesPerDay" style="width:600px;height:350px;"></div>
 <div id="soldObjects" style="width:600px;height:350px;"></div>
 <div id="ageOfSoldObjects" style="width:600px;height:350px;"></div>
+<div id="ageOfSoldAds" style="width:600px;height:350px;"></div>
 <div id="providersSold" style="width:600px;height:350px;"></div>
 <div id="newObjects" style="width:600px;height:350px;"></div>
+<div id="avgAgeOfAd" style="width:600px;height:350px;"></div>
 
 <script>
     let datesAsArray = Object.keys(data)
@@ -102,7 +105,6 @@
     }, );
 
     const year = new Date().getFullYear();
-    console.log()
     Plotly.newPlot("ageOfSoldObjects", [{
       x: datesAsArray,
       y: Object.entries(soldEstates).map(x => _.meanBy(x[1].filter(x => _.isNumber(x.constructionYear) && x.constructionYear > 0).map(e => year - e.constructionYear))),
@@ -110,6 +112,15 @@
     }], {
       title: "Alter der verkauften Objekte",
       yaxis: { title: "" },
+    }, );
+
+    Plotly.newPlot("ageOfSoldAds", [{
+      x: datesAsArray,
+      y: Object.entries(soldEstates).map(x => _.meanBy(x[1].map(n => luxon.DateTime.fromFormat(x[0], "yy-MM-dd hh-mm").diff(luxon.DateTime.fromISO(n.releaseDate), "days").days))),
+      type: "bar",
+    }], {
+      title: "Alter der Anzeigen der verkauften Objekte",
+      yaxis: { title: "days" },
     }, );
 
     Plotly.newPlot("providersSold", [{
@@ -129,6 +140,16 @@
     }], {
         title: "Neue Objekte pro Tag",
         yaxis: { title: "" }
+    }, );
+
+    const now = luxon.DateTime.now();
+    Plotly.newPlot("avgAgeOfAd", [{
+        x: datesAsArray,
+        y: Object.entries(data).map(x => _.meanBy(x[1].map(n => luxon.DateTime.fromFormat(x[0], "yy-MM-dd hh-mm").diff(luxon.DateTime.fromISO(n.releaseDate), "days").days))),
+        type: "line",
+    }], {
+        title: "durchschnittliches Alter der Anzeigen",
+        yaxis: { title: "Tage" }
     }, );
 </script>
 </body>
