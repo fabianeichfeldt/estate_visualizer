@@ -1,156 +1,321 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <title>Immo data visualizer</title>
-  <script src="https://cdn.plot.ly/plotly-2.12.1.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js" integrity="sha512-WFN04846sdKMIP5LKNphMaWzU7YpMyCU245etK3g/2ARYbPK9Ub18eG+ljU96qKRCWh+quCY7yefSmlkQw1ANQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.3.0/luxon.min.js" integrity="sha512-KKbQg5o92MwtJKR9sfm/HkREzfyzNMiKPIQ7i7SZOxwEdiNCm4Svayn2DBq7MKEdrqPJUOSIpy1v6PpFlCQ0YA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="database_bayreuth.js"></script>
-</head>
-<body>
-<h2>Bayreuth</h2>
-<div id="countOfEstates" style="width:600px;height:350px;"></div>
-<div id="avgPrice" style="width:600px;height:350px;"></div>
-<div id="avgPricePerSquareMetre" style="width:600px;height:350px;"></div>
-<div id="addedEstatesPerDay" style="width:600px;height:350px;"></div>
-<div id="soldObjects" style="width:600px;height:350px;"></div>
-<div id="ageOfSoldObjects" style="width:600px;height:350px;"></div>
-<div id="ageOfSoldAds" style="width:600px;height:350px;"></div>
-<div id="providersSold" style="width:600px;height:350px;"></div>
-<div id="newObjects" style="width:600px;height:350px;"></div>
-<div id="avgAgeOfAd" style="width:600px;height:350px;"></div>
+  <head>
+    <meta charset="utf-8" />
+    <title>Immo data visualizer</title>
+    <script src="https://cdn.plot.ly/plotly-2.12.1.min.js"></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"
+      integrity="sha512-WFN04846sdKMIP5LKNphMaWzU7YpMyCU245etK3g/2ARYbPK9Ub18eG+ljU96qKRCWh+quCY7yefSmlkQw1ANQ=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.3.0/luxon.min.js"
+      integrity="sha512-KKbQg5o92MwtJKR9sfm/HkREzfyzNMiKPIQ7i7SZOxwEdiNCm4Svayn2DBq7MKEdrqPJUOSIpy1v6PpFlCQ0YA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script lang="js">
+        let data;
+      function loadDataOfCity(city) {
+          const title = document.getElementById("title");
+          title.textContent = city; 
+          const database = document.getElementById("database");
+          database.parentNode.removeChild(database);
+          const newDatabase = document.createElement("script");
+          newDatabase.id="database";
+          newDatabase.src = `database_${city}.js`;
+          newDatabase.onload = () => updateCharts();
+          document.getElementsByTagName("head")[0].appendChild(newDatabase);
+      }
+    </script>
+    <script id="database"></script>
+  </head>
+  <body>
+    <input
+      checked
+      type="radio"
+      id="bayreuth"
+      name="city"
+      value="bayreuth"
+      onclick="loadDataOfCity('bayreuth')"
+    />
+    <label for="bayreuth">Bayreuth</label><br />
+    <input
+      type="radio"
+      id="schwabach"
+      name="city"
+      value="schwabach"
+      onclick="loadDataOfCity('schwabach')"
+    />
+    <label for="schwabach">Schwabach</label><br />
+    <h2 id="title"></h2>
+    <div id="countOfEstates" style="width: 600px; height: 350px"></div>
+    <div id="avgPrice" style="width: 600px; height: 350px"></div>
+    <div id="avgPricePerSquareMetre" style="width: 600px; height: 350px"></div>
+    <div id="addedEstatesPerDay" style="width: 600px; height: 350px"></div>
+    <div id="soldObjects" style="width: 600px; height: 350px"></div>
+    <div id="ageOfSoldObjects" style="width: 600px; height: 350px"></div>
+    <div id="ageOfSoldAds" style="width: 600px; height: 350px"></div>
+    <div id="providersSold" style="width: 600px; height: 350px"></div>
+    <div id="newObjects" style="width: 600px; height: 350px"></div>
+    <div id="avgAgeOfAd" style="width: 600px; height: 350px"></div>
 
-<script>
-    let datesAsArray = Object.keys(data)
+    <script>
+      function updateCharts() {
+        let datesAsArray = Object.keys(data);
 
-    Plotly.newPlot("countOfEstates", [{
-        x: datesAsArray,
-        y: Object.entries(data).map(x => x[1].length)
-    }], {
-        title: "Anzahl der verfügbaren Immobilien"
-    });
+        Plotly.newPlot(
+          "countOfEstates",
+          [
+            {
+              x: datesAsArray,
+              y: Object.entries(data).map((x) => x[1].length),
+            },
+          ],
+          {
+            title: "Anzahl der verfügbaren Immobilien",
+          }
+        );
 
-    Plotly.newPlot("avgPrice", [{
-        x: datesAsArray,
-        y: Object.entries(data).map(x => _.meanBy(x[1], e => e.price))
-    }], {
-        title: "Durchschnittspreis",
-        yaxis: { title: "€" }
-    });
+        Plotly.newPlot(
+          "avgPrice",
+          [
+            {
+              x: datesAsArray,
+              y: Object.entries(data).map((x) =>
+                _.meanBy(x[1], (e) => e.price)
+              ),
+            },
+          ],
+          {
+            title: "Durchschnittspreis",
+            yaxis: { title: "€" },
+          }
+        );
 
-    Plotly.newPlot("avgPricePerSquareMetre", [{
-        name: "max",
-        x: datesAsArray,
-        y: Object.entries(data).map(x => _.max(x[1].filter(x => x.price > 0 && x.area > 0).map(e => e.area ? e.price/ e.area : undefined))),
-    },{
-        name: "Durchschnitt",
-        x: datesAsArray,
-        y: Object.entries(data).map(x => _.meanBy(x[1].filter(x => x.price > 0 && x.area > 0), e => e.area ? e.price/ e.area : undefined)),
-    },{
-            name: "min",
-            x: datesAsArray,
-            y: Object.entries(data).map(x => _.min(x[1].filter(x => x.price > 0 && x.area > 0).map(e => e.area ? e.price/ e.area : undefined))),
-        }], {
-        title: "Durchschnittspreis pro m²",
-        yaxis: { title: "€/m²" }
-    }, );
+        Plotly.newPlot(
+          "avgPricePerSquareMetre",
+          [
+            {
+              name: "max",
+              x: datesAsArray,
+              y: Object.entries(data).map((x) =>
+                _.max(
+                  x[1]
+                    .filter((x) => x.price > 0 && x.area > 0)
+                    .map((e) => (e.area ? e.price / e.area : undefined))
+                )
+              ),
+            },
+            {
+              name: "Durchschnitt",
+              x: datesAsArray,
+              y: Object.entries(data).map((x) =>
+                _.meanBy(
+                  x[1].filter((x) => x.price > 0 && x.area > 0),
+                  (e) => (e.area ? e.price / e.area : undefined)
+                )
+              ),
+            },
+            {
+              name: "min",
+              x: datesAsArray,
+              y: Object.entries(data).map((x) =>
+                _.min(
+                  x[1]
+                    .filter((x) => x.price > 0 && x.area > 0)
+                    .map((e) => (e.area ? e.price / e.area : undefined))
+                )
+              ),
+            },
+          ],
+          {
+            title: "Durchschnittspreis pro m²",
+            yaxis: { title: "€/m²" },
+          }
+        );
 
-    const addedEstates = [];
-    let estatesOnDayBefore = undefined;
-    for(let i of Object.values(data)) {
-        addedEstates.push(estatesOnDayBefore ? i.length - estatesOnDayBefore : 0);
-        estatesOnDayBefore = i.length;
-    }
+        const addedEstates = [];
+        let estatesOnDayBefore = undefined;
+        for (let i of Object.values(data)) {
+          addedEstates.push(
+            estatesOnDayBefore ? i.length - estatesOnDayBefore : 0
+          );
+          estatesOnDayBefore = i.length;
+        }
 
-    Plotly.newPlot("addedEstatesPerDay", [{
-        x: datesAsArray,
-        y: addedEstates,
-        type: "bar",
-    }], {
-        title: "Änderung zum Vortag",
-        yaxis: { title: "" }
-    }, );
+        Plotly.newPlot(
+          "addedEstatesPerDay",
+          [
+            {
+              x: datesAsArray,
+              y: addedEstates,
+              type: "bar",
+            },
+          ],
+          {
+            title: "Änderung zum Vortag",
+            yaxis: { title: "" },
+          }
+        );
 
-    let currentEstates = [];
-    let lastEstates = undefined;
-    const soldEstates = {};
-    const newEstates = {};
-    const providers = new Map();
-    let lastKey = undefined;
-    for(let [key, value] of Object.entries(data)) {
-        currentEstates = [];
-        value.forEach(x => {
-            currentEstates.push(x)
-            if (!providers.has(x.provider))
-                providers.set(x.provider, 0)
-        });
-        soldEstates[key] = _.differenceWith(lastEstates, currentEstates, (x,y) => x.id === y.id);
-        soldEstates[key].forEach(x => {
-            const providerSold = data[lastKey].find(a => a.id === x.id)?.provider;
+        let currentEstates = [];
+        let lastEstates = undefined;
+        const soldEstates = {};
+        const newEstates = {};
+        const providers = new Map();
+        let lastKey = undefined;
+        for (let [key, value] of Object.entries(data)) {
+          currentEstates = [];
+          value.forEach((x) => {
+            currentEstates.push(x);
+            if (!providers.has(x.provider)) providers.set(x.provider, 0);
+          });
+          soldEstates[key] = _.differenceWith(
+            lastEstates,
+            currentEstates,
+            (x, y) => x.id === y.id
+          );
+          soldEstates[key].forEach((x) => {
+            const providerSold = data[lastKey].find((a) => a.id === x.id)
+              ?.provider;
             providers.set(providerSold, providers.get(providerSold) + 1);
-        });
-        newEstates[key] = lastEstates ? _.differenceWith(currentEstates, lastEstates, (x,y) => x.id === y.id) : [];
-        lastEstates = currentEstates;
-        lastKey = key;
-    }
+          });
+          newEstates[key] = lastEstates
+            ? _.differenceWith(
+                currentEstates,
+                lastEstates,
+                (x, y) => x.id === y.id
+              )
+            : [];
+          lastEstates = currentEstates;
+          lastKey = key;
+        }
 
-    Plotly.newPlot("soldObjects", [{
-        x: datesAsArray,
-        y: Object.values(soldEstates).map(x => x.length),
-        type: "bar",
-    }], {
-        title: "Verkaufte Objekte pro Tag",
-        yaxis: { title: "" }
-    }, );
+        Plotly.newPlot(
+          "soldObjects",
+          [
+            {
+              x: datesAsArray,
+              y: Object.values(soldEstates).map((x) => x.length),
+              type: "bar",
+            },
+          ],
+          {
+            title: "Verkaufte Objekte pro Tag",
+            yaxis: { title: "" },
+          }
+        );
 
-    const year = new Date().getFullYear();
-    Plotly.newPlot("ageOfSoldObjects", [{
-      x: datesAsArray,
-      y: Object.entries(soldEstates).map(x => _.meanBy(x[1].filter(x => _.isNumber(x.constructionYear) && x.constructionYear > 0).map(e => year - e.constructionYear))),
-      type: "bar",
-    }], {
-      title: "Alter der verkauften Objekte",
-      yaxis: { title: "" },
-    }, );
+        const year = new Date().getFullYear();
+        Plotly.newPlot(
+          "ageOfSoldObjects",
+          [
+            {
+              x: datesAsArray,
+              y: Object.entries(soldEstates).map((x) =>
+                _.meanBy(
+                  x[1]
+                    .filter(
+                      (x) =>
+                        _.isNumber(x.constructionYear) && x.constructionYear > 0
+                    )
+                    .map((e) => year - e.constructionYear)
+                )
+              ),
+              type: "bar",
+            },
+          ],
+          {
+            title: "Alter der verkauften Objekte",
+            yaxis: { title: "" },
+          }
+        );
 
-    Plotly.newPlot("ageOfSoldAds", [{
-      x: datesAsArray,
-      y: Object.entries(soldEstates).map(x => _.meanBy(x[1].map(n => luxon.DateTime.fromFormat(x[0], "yy-MM-dd hh-mm").diff(luxon.DateTime.fromISO(n.releaseDate), "days").days))),
-      type: "bar",
-    }], {
-      title: "Alter der Anzeigen der verkauften Objekte",
-      yaxis: { title: "days" },
-    }, );
+        Plotly.newPlot(
+          "ageOfSoldAds",
+          [
+            {
+              x: datesAsArray,
+              y: Object.entries(soldEstates).map((x) =>
+                _.meanBy(
+                  x[1].map(
+                    (n) =>
+                      luxon.DateTime.fromFormat(x[0], "yy-MM-dd hh-mm").diff(
+                        luxon.DateTime.fromISO(n.releaseDate),
+                        "days"
+                      ).days
+                  )
+                )
+              ),
+              type: "bar",
+            },
+          ],
+          {
+            title: "Alter der Anzeigen der verkauften Objekte",
+            yaxis: { title: "days" },
+          }
+        );
 
-    Plotly.newPlot("providersSold", [{
-        y: Array.from(providers.values()),
-        x: Array.from(providers.keys()),
-        type: "bar",
-    }], {
-        title: "Best Of Makler",
-        xaxis: { title: "Makler" },
-        yaxis: { title: "verkaufte Objekte" },
-    }, );
+        Plotly.newPlot(
+          "providersSold",
+          [
+            {
+              y: Array.from(providers.values()),
+              x: Array.from(providers.keys()),
+              type: "bar",
+            },
+          ],
+          {
+            title: "Best Of Makler",
+            xaxis: { title: "Makler" },
+            yaxis: { title: "verkaufte Objekte" },
+          }
+        );
 
-    Plotly.newPlot("newObjects", [{
-        x: datesAsArray,
-        y: Object.values(newEstates).map(x => x.length),
-        type: "bar",
-    }], {
-        title: "Neue Objekte pro Tag",
-        yaxis: { title: "" }
-    }, );
+        Plotly.newPlot(
+          "newObjects",
+          [
+            {
+              x: datesAsArray,
+              y: Object.values(newEstates).map((x) => x.length),
+              type: "bar",
+            },
+          ],
+          {
+            title: "Neue Objekte pro Tag",
+            yaxis: { title: "" },
+          }
+        );
 
-    const now = luxon.DateTime.now();
-    Plotly.newPlot("avgAgeOfAd", [{
-        x: datesAsArray,
-        y: Object.entries(data).map(x => _.meanBy(x[1].map(n => luxon.DateTime.fromFormat(x[0], "yy-MM-dd hh-mm").diff(luxon.DateTime.fromISO(n.releaseDate), "days").days))),
-        type: "line",
-    }], {
-        title: "durchschnittliches Alter der Anzeigen",
-        yaxis: { title: "Tage" }
-    }, );
-</script>
-</body>
+        const now = luxon.DateTime.now();
+        Plotly.newPlot(
+          "avgAgeOfAd",
+          [
+            {
+              x: datesAsArray,
+              y: Object.entries(data).map((x) =>
+                _.meanBy(
+                  x[1].map(
+                    (n) =>
+                      luxon.DateTime.fromFormat(x[0], "yy-MM-dd hh-mm").diff(
+                        luxon.DateTime.fromISO(n.releaseDate),
+                        "days"
+                      ).days
+                  )
+                )
+              ),
+              type: "line",
+            },
+          ],
+          {
+            title: "durchschnittliches Alter der Anzeigen",
+            yaxis: { title: "Tage" },
+          }
+        );
+      }
+    </script>
+  </body>
 </html>
